@@ -4,7 +4,8 @@
 name = "Ayoung Yun"
 
 # Username (this should match the folder name)
-authors = ["admin"] user_groups = ["Researchers"]
+authors = ["admin"] 
+user_groups = ["Team"]
 
 # Is this the primary user of the site?
 superuser = false
@@ -31,7 +32,10 @@ email = "beige1313@snu.ac.kr"
 # For an email link, use "fas" icon pack, "envelope" icon, and a link in the
 # form "mailto:your-email@example.com" or "#contact" for contact widget.
 
-[[social]] icon = "envelope" icon_pack = "fas" link = "mailto:beige1313@snu.ac.kr"
+[[social]] 
+icon = "envelope" 
+icon_pack = "fas" 
+link = "mailto:beige1313@snu.ac.kr"
 
 
 +++
