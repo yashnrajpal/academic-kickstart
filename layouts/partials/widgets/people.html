@@ -5,8 +5,9 @@
 {{ $page := .page }}
 {{ $show_social := $page.Params.design.show_social | default false }}
 {{ $show_interests := $page.Params.design.show_interests | default true }}
+{{ $hash_id := .hash_id | default "people" }}
 
-<div class="row justify-content-center people-widget">
+<div class="row justify-content-center people-widget" id="people-shuffle-{{ $hash_id }}">
   {{ with $page.Title }}
   <div class="col-md-12 section-heading">
     <h1>{{ . | markdownify | emojify }}</h1>
@@ -39,7 +40,8 @@
   {{ with site.GetPage (printf "/authors/%s" (path.Base (path.Split .Path).Dir)) }}
     {{ $link = .RelPermalink }}
   {{ end }}
-  <div class="col-12 col-sm-auto people-person">
+  {{/* Tag each person with their group so the shuffle script keeps groups separate. */}}
+  <div class="col-12 col-sm-auto people-person" data-people-group="{{ $group }}">
     {{ $src := "" }}
     {{ if site.Params.avatar.gravatar }}
       {{ $src = printf "https://s.gravatar.com/avatar/%s?s=150" (md5 .Params.email) }}
@@ -62,3 +64,48 @@
   {{ end }}
   {{ end }}
 </div>
+
+{{/* Randomise the order of people on every page load. Runs synchronously right after the
+     markup so the shuffled order is in place before the browser paints. Shuffles within each
+     user group so groups never interleave. With JS disabled the original build-time order is
+     shown, fully visible. */}}
+<script>
+(function () {
+  var row = document.getElementById("people-shuffle-{{ $hash_id }}");
+  if (!row) return;
+
+  var people = Array.prototype.slice.call(row.querySelectorAll(".people-person[data-people-group]"));
+  if (people.length < 2) return;
+
+  var order = [];
+  var byGroup = Object.create(null);
+  people.forEach(function (el) {
+    var group = el.getAttribute("data-people-group");
+    if (!byGroup[group]) {
+      byGroup[group] = [];
+      order.push(group);
+    }
+    byGroup[group].push(el);
+  });
+
+  order.forEach(function (group) {
+    var nodes = byGroup[group];
+    if (nodes.length < 2) return;
+
+    // Anchor the group's slot in the row so headings and other groups stay put.
+    var parent = nodes[0].parentNode;
+    var marker = document.createComment("people-shuffle");
+    parent.insertBefore(marker, nodes[0]);
+
+    for (var i = nodes.length - 1; i > 0; i--) {  // Fisher-Yates
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = nodes[i];
+      nodes[i] = nodes[j];
+      nodes[j] = tmp;
+    }
+
+    nodes.forEach(function (n) { parent.insertBefore(n, marker); });
+    parent.removeChild(marker);
+  });
+})();
+</script>
